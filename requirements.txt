@@ -1,0 +1,6 @@
+# python-microservice/requirements.txt
+deepface>=0.0.79
+fastapi
+uvicorn[standard]
+python-multipart
+gunicorn # For production serving
