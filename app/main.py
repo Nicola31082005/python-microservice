@@ -67,9 +67,13 @@ app = FastAPI(title="Face Verification Microservice")
 logging.info("Configuring CORS to allow all origins ('*').")
 origins = ["*"]
 
+# COMMENTED OUT: Allow all origins (use with caution)
+# # logging.info("Configuring CORS to allow all origins ('*').")
+# # origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins, # Now set to ["*"]
+    allow_origins=origins, # Now explicitly set to ["*"]
     allow_credentials=True, # Note: allow_credentials=True is incompatible with allow_origins=["*"] in some browsers/specs. Set to False if issues arise.
     allow_methods=["POST", "GET"], # Limit methods if possible
     allow_headers=["Content-Type"], # Limit headers if possible
