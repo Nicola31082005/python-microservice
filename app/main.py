@@ -49,23 +49,28 @@ if not os.path.exists(TEMP_DIR):
 app = FastAPI(title="Face Verification Microservice")
 
 # --- CORS Configuration ---
-# Read allowed origins from environment variable, split by comma
-# Provide a default value that includes common local development origins
-allowed_origins_str = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
-origins = [origin.strip() for origin in allowed_origins_str.split(',') if origin.strip()]
+# COMMENTED OUT: Reading from environment variable is overridden below
+# # Read allowed origins from environment variable, split by comma
+# # Provide a default value that includes common local development origins
+# allowed_origins_str = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+# origins = [origin.strip() for origin in allowed_origins_str.split(',') if origin.strip()]
+#
+# # Log the origins being used (good for debugging deployment)
+# logging.info(f"Configuring CORS for origins: {origins}")
+#
+# # Ensure there's at least one origin if the env var was empty/invalid
+# if not origins:
+#     logging.warning("ALLOWED_ORIGINS environment variable resulted in an empty list. Falling back to default localhost.")
+#     origins = ["http://localhost:3000", "http://127.0.0.1:3000"] # Sensible default fallback
 
-# Log the origins being used (good for debugging deployment)
-logging.info(f"Configuring CORS for origins: {origins}")
-
-# Ensure there's at least one origin if the env var was empty/invalid
-if not origins:
-    logging.warning("ALLOWED_ORIGINS environment variable resulted in an empty list. Falling back to default localhost.")
-    origins = ["http://localhost:3000", "http://127.0.0.1:3000"] # Sensible default fallback
+# Allow all origins (use with caution)
+logging.info("Configuring CORS to allow all origins ('*').")
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins, # Use the dynamic list read from env var
-    allow_credentials=True,
+    allow_origins=origins, # Now set to ["*"]
+    allow_credentials=True, # Note: allow_credentials=True is incompatible with allow_origins=["*"] in some browsers/specs. Set to False if issues arise.
     allow_methods=["POST", "GET"], # Limit methods if possible
     allow_headers=["Content-Type"], # Limit headers if possible
 )
