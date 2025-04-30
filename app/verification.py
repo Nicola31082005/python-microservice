@@ -3,27 +3,22 @@ import os
 import logging # Use logging for better debug/error info
 
 # --- IMPORTANT: Configure DeepFace/TensorFlow Logging & Force CPU ---
-# NOTE: CUDA_VISIBLE_DEVICES is now set in main.py *before* this module is imported.
-# os.environ['CUDA_VISIBLE_DEVICES'] = '-1' # Removed from here
-
+# Set CUDA_VISIBLE_DEVICES to -1 BEFORE importing TensorFlow/DeepFace
+# This forces TensorFlow to use the CPU only, avoiding GPU initialization errors on Render.
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 # Suppress excessive TensorFlow logs BEFORE importing DeepFace/TensorFlow
-logging.info("Configuring TF log level in verification.py...")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # 0 = all, 1 = info, 2 = warning, 3 = error
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 # Suppress obnoxious PIL logs if they appear
 logging.getLogger('PIL').setLevel(logging.WARNING)
-logging.info("TF log level configured.")
 
 # Now import DeepFace safely
 DEEPFACE_IMPORT_ERROR = None # Initialize to None
-logging.info("Attempting to import DeepFace...")
 try:
     from deepface import DeepFace
     DEEPFACE_AVAILABLE = True
-    logging.info("DeepFace imported successfully.")
 except ImportError as e:
     # Handle cases where DeepFace might not be installed
-    logging.error(f"DeepFace import failed: {e}", exc_info=True)
     DEEPFACE_AVAILABLE = False
     DEEPFACE_IMPORT_ERROR = str(e) # Assign the error string if import fails
 
@@ -39,12 +34,9 @@ def verify_identity(img1_path, img2_path):
     Returns:
         dict: A dictionary containing the verification results or an error.
     """
-    logging.info(f"Entered verify_identity. DeepFace available: {DEEPFACE_AVAILABLE}")
     if not DEEPFACE_AVAILABLE:
-        logging.error(f"Attempted verification, but DeepFace not available. Import error: {DEEPFACE_IMPORT_ERROR}")
         return {"success": False, "error": f"DeepFace library failed to import: {DEEPFACE_IMPORT_ERROR}", "details": "Ensure DeepFace and its dependencies (Tensorflow, etc.) are installed correctly in the Python environment."}
 
-    logging.info(f"Attempting DeepFace.verify on {img1_path} and {img2_path}")
     try:
         # --- Perform Face Verification ---
         # Common models: 'VGG-Face', 'Facenet', 'Facenet512', 'ArcFace', 'Dlib', 'SFace'
@@ -60,7 +52,6 @@ def verify_identity(img1_path, img2_path):
             enforce_detection=False, # Changed to False to avoid errors when face detection is difficult
             align=True # Usually good to keep True for better accuracy
         )
-        logging.info(f"DeepFace.verify call completed. Raw result: {result}")
 
         # --- Process Result ---
         similarity = (1 - result.get('distance', 1.0)) * 100 # Calculate similarity % (approx)
@@ -87,7 +78,6 @@ def verify_identity(img1_path, img2_path):
 
     except ValueError as ve:
         # Specific error from DeepFace (e.g., face could not be detected in one/both images)
-        logging.warning(f"ValueError during DeepFace.verify: {ve}") # Changed to warning
         err_str = str(ve).lower()
         details = "Face detection failed."
         if "face could not be detected" in err_str:
@@ -97,11 +87,10 @@ def verify_identity(img1_path, img2_path):
 
         return {"success": False, "error": "ValueError during verification", "details": details, "match": False}
     except FileNotFoundError as fnf:
-         logging.error(f"FileNotFoundError during DeepFace.verify: {fnf}") # More specific log
          return {"success": False, "error": "FileNotFoundError", "details": f"Image file not found: {str(fnf)}", "match": False}
     except Exception as e:
         # Catch any other exceptions (e.g., invalid image format, library issues)
-        logging.error(f"Unexpected error during face verification in verify_identity: {e}", exc_info=True)
+        logging.error(f"Unexpected error during face verification: {e}", exc_info=True)
         return {"success": False, "error": "An unexpected error occurred during verification.", "details": str(e), "match": False}
 
 # Note: The __main__ block from the original script has been removed as it's not needed here.
