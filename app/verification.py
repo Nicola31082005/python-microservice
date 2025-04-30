@@ -2,7 +2,10 @@
 import os
 import logging # Use logging for better debug/error info
 
-# --- IMPORTANT: Configure DeepFace/TensorFlow Logging ---
+# --- IMPORTANT: Configure DeepFace/TensorFlow Logging & Force CPU ---
+# Set CUDA_VISIBLE_DEVICES to -1 BEFORE importing TensorFlow/DeepFace
+# This forces TensorFlow to use the CPU only, avoiding GPU initialization errors on Render.
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 # Suppress excessive TensorFlow logs BEFORE importing DeepFace/TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # 0 = all, 1 = info, 2 = warning, 3 = error
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
