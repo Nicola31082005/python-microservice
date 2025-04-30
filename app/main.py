@@ -1,9 +1,19 @@
 # python-microservice/app/main.py
 import os
+import logging
+
+# --- Force CPU Usage EARLY ---
+# Set this BEFORE any other imports that might trigger TensorFlow loading
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.info("Setting CUDA_VISIBLE_DEVICES=-1 in main.py")
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+# Verify it's set (for logs)
+logging.info(f"CUDA_VISIBLE_DEVICES = {os.environ.get('CUDA_VISIBLE_DEVICES')}")
+
+# --- Now proceed with other imports ---
 import sys
 import base64
 import uuid
-import logging
 import shutil
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,15 +22,18 @@ from pydantic import BaseModel, Field
 from typing import Union
 
 # Import the verification logic from the local verification module
+logging.info("Attempting to import verification module...")
 try:
     # Use relative import within the package
     from .verification import verify_identity, DEEPFACE_AVAILABLE, DEEPFACE_IMPORT_ERROR
+    logging.info("Successfully imported verification module (relative).")
 except ImportError as e:
     logging.critical(f"Failed to import verification module: {e}")
     # Fallback for potential path issues during development/debugging
     try:
         sys.path.append(os.path.dirname(__file__)) # Add current dir
         from verification import verify_identity, DEEPFACE_AVAILABLE, DEEPFACE_IMPORT_ERROR
+        logging.info("Successfully imported verification module (fallback).")
     except ImportError as e_inner:
         logging.critical(f"Failed to import verification module (fallback attempt): {e_inner}")
         DEEPFACE_AVAILABLE = False
@@ -81,6 +94,7 @@ app.add_middleware(
 
 def save_base64_temp(base64_string: str, prefix: str = "") -> Union[str, None]:
     """Saves a base64 string to a temporary image file."""
+    logging.debug(f"Attempting to save base64 string (prefix: {prefix})") # Added debug log
     try:
         # Remove data URI prefix if present
         if "," in base64_string:
@@ -109,6 +123,7 @@ def save_base64_temp(base64_string: str, prefix: str = "") -> Union[str, None]:
 
 def cleanup_file(filepath: Union[str, None]):
     """Safely deletes a file."""
+    logging.debug(f"Cleanup requested for: {filepath}") # Added debug log
     if filepath and os.path.exists(filepath):
         try:
             os.remove(filepath)
