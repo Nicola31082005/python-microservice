@@ -5,3 +5,4 @@ uvicorn[standard]
 python-multipart
 gunicorn # For production serving
 tf-keras # Add compatibility layer for TensorFlow and RetinaFace
+tensorflow-cpu # Explicitly request the CPU version

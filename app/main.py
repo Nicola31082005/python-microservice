@@ -33,7 +33,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # Determine the base directory of the app for consistent path handling
 APP_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMP_DIR = os.path.join(APP_BASE_DIR, "temp_images")
+# TEMP_DIR = os.path.join(APP_BASE_DIR, "temp_images") # Original path, not writable on Vercel
+TEMP_DIR = "/tmp/temp_images" # Vercel writable path
 
 # --- Temporary File Handling ---
 if not os.path.exists(TEMP_DIR):
